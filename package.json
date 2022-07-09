@@ -1,0 +1,35 @@
+{
+  "name": "tailwind-saasblocks",
+  "version": "0.1.2",
+  "repository": "https://github.com/saasblocks/tailwind-saasblocks.git",
+  "bugs": "https://github.com/saasblocks/tailwind-saasblocks/issues",
+  "homepage": "https://saasblocks.app",
+  "author": "Alex Luong <alex@alexluong.com>",
+  "license": "MIT",
+  "keywords": [
+    "saasblocks",
+    "tailwind",
+    "tailwindcss",
+    "tailwind components",
+    "tailwind elements",
+    "tailwind library",
+    "tailwind ui"
+  ],
+  "main": "index.js",
+  "files": [
+    "index.js",
+    "default.theme.js"
+  ],
+  "scripts": {
+    "format": "prettier --write '**'",
+    "format:check": "prettier --check '**'"
+  },
+  "peerDependencies": {
+    "tailwindcss": ">=3.0.0 || insiders"
+  },
+  "devDependencies": {
+    "mini-svg-data-uri": "^1.4.4",
+    "prettier": "^2.7.1",
+    "tailwindcss": "^3.1.5"
+  }
+}
