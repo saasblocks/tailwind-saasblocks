@@ -32,6 +32,7 @@ module.exports = plugin.withOptions(
       addBase({
         // default CSS
         body: {
+          "--tw-text-opacity": 1,
           color: "rgb(var(--color-text) / var(--tw-text-opacity))",
         },
 
