@@ -1,10 +1,16 @@
 const plugin = require("tailwindcss/plugin");
 const svgToDataUri = require("mini-svg-data-uri");
-const defaultTheme = require("./default.theme");
+const defaultTheme = require("tailwind-saasblocks/themes/midnight-envy.theme");
+
+const defaultOptions = {
+  themes: {
+    dark: defaultTheme,
+  },
+};
 
 module.exports = plugin.withOptions(
   function (options) {
-    if (!options) options = defaultTheme;
+    if (!options) options = defaultOptions;
     return function ({
       addBase,
       addUtilities,
@@ -12,51 +18,65 @@ module.exports = plugin.withOptions(
       matchUtilities,
       theme,
     }) {
+      const themes = Object.entries(options.themes);
+      const defaultTheme = themes[0][1];
+      const themeCss = themes.reduce((css, [themeName, themeValue]) => {
+        css[`.${themeName}`] = themeValue.colors;
+        return css;
+      }, {});
+
       // ===== Base =====
       addBase({
+        // default CSS
         body: {
-          color: theme("colors.text-muted"),
+          color: "rgb(var(--color-text) / var(--tw-text-opacity))",
         },
+
+        ".dark": {
+          "color-scheme": "dark",
+        },
+
+        // CSS variables for color themes
+        ":root": {
+          ...defaultTheme.colors,
+        },
+        ...themeCss,
       });
 
       // ===== Scrollbar =====
       addUtilities({
         ".scrollbar": {
-          "--scrollbar-thumb": "#cdcdcd",
-          "--scrollbar-track": "#f0f0f0",
+          "--scrollbar-thumb": "rgb(var(--color-muted-3) / 100%)",
+          "--scrollbar-track": "rgb(var(--color-muted-1) / 100%)",
           "--scrollbar-width": "18px",
           "scrollbar-color": "var(--scrollbar-thumb) var(--scrollbar-track)",
           "&::-webkit-scrollbar": {
             width: "var(--scrollbar-width)",
             height: "var(--scrollbar-width)",
           },
-        },
-        ".scrollbar-thin": {
-          "--scrollbar-width": "12px",
-          "scrollbar-width": "thin",
-        },
-        ".scrollbar-hidden": {
-          "--scrollbar-width": "0px",
-          "scrollbar-width": "none",
-        },
-        ".scrollbar-saas": {
-          "--scrollbar-thumb": theme("colors.border"),
-          "--scrollbar-track": theme("colors.background-3"),
           "&::-webkit-scrollbar-track": {
-            "background-color": theme("colors.background-3"),
+            "background-color": "var(--scrollbar-track)",
             "border-radius": theme("borderRadius.full"),
           },
           "&::-webkit-scrollbar-thumb": {
-            "background-color": theme("colors.border"),
+            "background-color": "var(--scrollbar-thumb)",
             "border-radius": theme("borderRadius.full"),
             "border-width": theme("borderWidth.4"),
             "border-style": "solid",
             "border-color": "transparent",
             "background-clip": "content-box",
           },
-          "&.scrollbar-thin::-webkit-scrollbar-thumb": {
+        },
+        ".scrollbar-thin": {
+          "--scrollbar-width": "12px",
+          "scrollbar-width": "thin",
+          "&::-webkit-scrollbar-thumb": {
             borderWidth: theme("borderWidth.2"),
           },
+        },
+        ".scrollbar-hidden": {
+          "--scrollbar-width": "0px",
+          "scrollbar-width": "none",
         },
       });
 
@@ -110,12 +130,21 @@ module.exports = plugin.withOptions(
 
       // ===== Form Overrides =====
       // Override select chevron icon color from @tailwindcss/forms plugin
+      // TODO: enable user to override color / get text color from theme
       addComponents({
+        ".dark select": {
+          "background-image": `url("${svgToDataUri(
+            `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20"><path stroke="${theme(
+              "colors.['text']",
+              "#abadc6"
+            )}" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 8l4 4 4-4"/></svg>`
+          )}")`,
+        },
         select: {
           "background-image": `url("${svgToDataUri(
             `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20"><path stroke="${theme(
-              "colors.['text-muted']",
-              "#abadc6"
+              "colors.['text']",
+              "#636370"
             )}" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 8l4 4 4-4"/></svg>`
           )}")`,
         },
@@ -138,7 +167,31 @@ module.exports = plugin.withOptions(
           maxWidth: {
             "content-xl": 2560,
           },
-          colors: options.colors,
+          colors: {
+            text: "rgb(var(--color-text) / <alpha-value>)",
+            heading: "rgb(var(--color-heading) / <alpha-value>)",
+            hr: "rgb(var(--color-hr) / <alpha-value>)",
+            layer: {
+              0: "rgb(var(--color-layer-0) / <alpha-value>)",
+              1: "rgb(var(--color-layer-1) / <alpha-value>)",
+              2: "rgb(var(--color-layer-2) / <alpha-value>)",
+              3: "rgb(var(--color-layer-3) / <alpha-value>)",
+            },
+            muted: {
+              1: "rgb(var(--color-muted-1) / <alpha-value>)",
+              2: "rgb(var(--color-muted-2) / <alpha-value>)",
+              3: "rgb(var(--color-muted-3) / <alpha-value>)",
+            },
+            primary: "rgb(var(--color-primary) / <alpha-value>)",
+            "primary-accent":
+              "rgb(var(--color-primary-accent) / <alpha-value>)",
+            critical: "rgb(var(--color-critical) / <alpha-value>)",
+            "critical-accent":
+              "rgb(var(--color-critical-accent) / <alpha-value>)",
+            secondary: "rgb(var(--color-secondary) / <alpha-value>)",
+            "secondary-accent":
+              "rgb(var(--color-secondary-accent) / <alpha-value>)",
+          },
 
           // Typography
           typography: ({ theme }) => ({
@@ -148,40 +201,46 @@ module.exports = plugin.withOptions(
                   maxWidth: "65ch",
 
                   // Colors
-                  "--tw-prose-body": theme("colors.text-muted"),
-                  "--tw-prose-headings": theme("colors.white"),
-                  "--tw-prose-lead": theme("colors.white"),
-                  "--tw-prose-links": theme("colors.white"),
-                  "--tw-prose-bold": theme("colors.white"),
-                  "--tw-prose-counters": theme("colors.white"),
-                  "--tw-prose-bullets": theme("colors.white"),
-                  "--tw-prose-hr": theme("colors.background-3"),
-                  "--tw-prose-quotes": theme("colors.white"),
-                  "--tw-prose-quote-borders": theme("colors.background-3"),
-                  "--tw-prose-captions": theme("colors.text-muted"),
-                  "--tw-prose-code": theme("colors.white"),
-                  "--tw-prose-pre-code": theme("colors.white"),
-                  "--tw-prose-pre-bg": "rgb(0 0 0 / 50%)",
-                  "--tw-prose-th-borders": theme("colors.background-3"),
-                  "--tw-prose-td-borders": theme("colors.background-3"),
-                  "--tw-prose-invert-body": theme("colors.text-muted"),
-                  "--tw-prose-invert-headings": theme("colors.white"),
-                  "--tw-prose-invert-lead": theme("colors.white"),
-                  "--tw-prose-invert-links": theme("colors.white"),
-                  "--tw-prose-invert-bold": theme("colors.white"),
-                  "--tw-prose-invert-counters": theme("colors.white"),
-                  "--tw-prose-invert-bullets": theme("colors.white"),
-                  "--tw-prose-invert-hr": theme("colors.background-3"),
-                  "--tw-prose-invert-quotes": theme("colors.white"),
-                  "--tw-prose-invert-quote-borders": theme(
-                    "colors.background-3"
-                  ),
-                  "--tw-prose-invert-captions": theme("colors.text-muted"),
-                  "--tw-prose-invert-code": theme("colors.white"),
-                  "--tw-prose-invert-pre-code": theme("colors.white"),
+                  "--tw-prose-body": "rgb(var(--color-text) / 100%)",
+                  "--tw-prose-headings": "rgb(var(--color-heading) / 100%)",
+                  "--tw-prose-lead": "rgb(var(--color-heading) / 100%)",
+                  "--tw-prose-links": "rgb(var(--color-heading) / 100%)",
+                  "--tw-prose-bold": "rgb(var(--color-heading) / 100%)",
+                  "--tw-prose-counters": "rgb(var(--color-heading) / 100%)",
+                  "--tw-prose-bullets": "rgb(var(--color-heading) / 100%)",
+                  "--tw-prose-hr": "rgb(var(--color-hr) / 100%)",
+                  "--tw-prose-quotes": "rgb(var(--color-heading) / 100%)",
+                  "--tw-prose-quote-borders": "rgb(var(--color-hr) / 100%)",
+                  "--tw-prose-captions": "rgb(var(--color-text) / 100%)",
+                  "--tw-prose-code": "rgb(var(--color-heading) / 100%)",
+                  "--tw-prose-pre-code": "rgb(var(--color-heading) / 100%)",
+                  "--tw-prose-pre-bg": "rgb(var(--color-muted-3) / 100%)",
+                  "--tw-prose-th-borders": "rgb(var(--color-muted-1) / 100%)",
+                  "--tw-prose-td-borders": "rgb(var(--color-muted-1) / 100%)",
+                  "--tw-prose-invert-body": "rgb(var(--color-text) / 100%)",
+                  "--tw-prose-invert-headings":
+                    "rgb(var(--color-heading) / 100%)",
+                  "--tw-prose-invert-lead": "rgb(var(--color-heading) / 100%)",
+                  "--tw-prose-invert-links": "rgb(var(--color-heading) / 100%)",
+                  "--tw-prose-invert-bold": "rgb(var(--color-heading) / 100%)",
+                  "--tw-prose-invert-counters":
+                    "rgb(var(--color-heading) / 100%)",
+                  "--tw-prose-invert-bullets":
+                    "rgb(var(--color-heading) / 100%)",
+                  "--tw-prose-invert-hr": "rgb(var(--color-layer-3) / 100%)",
+                  "--tw-prose-invert-quotes":
+                    "rgb(var(--color-heading) / 100%)",
+                  "--tw-prose-invert-quote-borders":
+                    "rgb(var(--color-layer-3) / 100%)",
+                  "--tw-prose-invert-captions": "rgb(var(--color-text) / 100%)",
+                  "--tw-prose-invert-code": "rgb(var(--color-heading) / 100%)",
+                  "--tw-prose-invert-pre-code":
+                    "rgb(var(--color-heading) / 100%)",
                   "--tw-prose-invert-pre-bg": "rgb(0 0 0 / 50%)",
-                  "--tw-prose-invert-th-borders": theme("colors.background-3"),
-                  "--tw-prose-invert-td-borders": theme("colors.background-3"),
+                  "--tw-prose-invert-th-borders":
+                    "rgb(var(--color-layer-3) / 100%)",
+                  "--tw-prose-invert-td-borders":
+                    "rgb(var(--color-layer-3) / 100%)",
 
                   // Font sizes & spacing
                   h1: {
@@ -199,7 +258,7 @@ module.exports = plugin.withOptions(
                   h5: {
                     fontSize: theme("fontSize.xs"),
                     fontWeight: theme("fontWeight.semibold"),
-                    color: theme("colors.white"),
+                    color: theme("colors.heading"),
                   },
                   "h2,h3,h4,h5": {
                     marginTop: theme("space.6"),
@@ -233,7 +292,7 @@ module.exports = plugin.withOptions(
                   h5: {
                     fontSize: theme("fontSize.lg"),
                     fontWeight: theme("fontWeight.semibold"),
-                    color: theme("colors.white"),
+                    color: theme("colors.heading"),
                   },
                   "h2,h3,h4,h5": {
                     marginTop: theme("space.8"),
