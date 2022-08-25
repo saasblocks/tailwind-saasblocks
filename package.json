@@ -1,6 +1,6 @@
 {
   "name": "tailwind-saasblocks",
-  "version": "0.2.0-beta.7",
+  "version": "0.2.0-beta.9",
   "repository": "https://github.com/saasblocks/tailwind-saasblocks.git",
   "bugs": "https://github.com/saasblocks/tailwind-saasblocks/issues",
   "homepage": "https://saasblocks.app",
@@ -18,6 +18,7 @@
   "main": "index.js",
   "files": [
     "index.js",
+    "gradients/*.js",
     "themes/*.js"
   ],
   "scripts": {

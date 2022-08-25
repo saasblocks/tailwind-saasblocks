@@ -1,16 +1,19 @@
 const plugin = require("tailwindcss/plugin");
 const svgToDataUri = require("mini-svg-data-uri");
-const defaultTheme = require("tailwind-saasblocks/themes/midnight-envy.theme");
+const defaultTheme = require("./themes/midnight-envy.theme");
+const defaultGradients = require("./gradients/default.gradients");
 
 const defaultOptions = {
-  themes: {
-    dark: defaultTheme,
-  },
+  themes: { dark: defaultTheme },
+  gradients: defaultGradients,
 };
 
 module.exports = plugin.withOptions(
-  function (options) {
-    if (!options) options = defaultOptions;
+  function (_options) {
+    const options = {
+      ...defaultOptions,
+      ...(_options || {}),
+    };
     return function ({
       addBase,
       addUtilities,
@@ -78,6 +81,63 @@ module.exports = plugin.withOptions(
           "--scrollbar-width": "0px",
           "scrollbar-width": "none",
         },
+      });
+
+      // ===== Gradients =====
+      const gradients = Object.entries(options.gradients || {});
+      const gradientClasses = gradients.reduce(
+        (cssVariables, [name, colors]) => {
+          const light = {
+            ...cssVariables[":root"],
+            [`--gradient-${name}-from`]: colors.light.from,
+            [`--gradient-${name}-to`]: colors.light.to,
+            ...(colors.light.via
+              ? {
+                  [`--gradient-${name}-via`]: colors.light.via,
+                }
+              : {}),
+          };
+          cssVariables[":root"] = light;
+          cssVariables[".light"] = light;
+          cssVariables[".dark"] = {
+            ...cssVariables[".dark"],
+            [`--gradient-${name}-from`]: colors.dark.from,
+            [`--gradient-${name}-to`]: colors.dark.to,
+            ...(colors.dark.via
+              ? {
+                  [`--gradient-${name}-via`]: colors.dark.via,
+                }
+              : {}),
+          };
+          cssVariables[`.gradient-${name}`] = {
+            "--tw-gradient-name": `url(#gradient-${name})`,
+            "--tw-gradient-from": `var(--gradient-${name}-from)`,
+            "--tw-gradient-via": `var(--gradient-${name}-via)`,
+            "--tw-gradient-to": `var(--gradient-${name}-to)`,
+            "--tw-gradient-stops": colors.light.via
+              ? `var(--tw-gradient-from), var(--tw-gradient-via), var(--tw-gradient-to)`
+              : "var(--tw-gradient-from), var(--tw-gradient-to)",
+          };
+          return cssVariables;
+        },
+        { ":root": {}, ".dark": {} }
+      );
+
+      addUtilities({
+        // text gradient helper
+        ".text-gradient": {
+          color: "transparent",
+          "background-clip": "text",
+        },
+        ".stroke-gradient": {
+          // stroke: "url(var(--tw-gradient-name))",
+          stroke: "var(--tw-gradient-name)",
+        },
+        ".fill-gradient": {
+          fill: "var(--tw-gradient-name)",
+        },
+        // gradients classes
+        ...gradientClasses,
       });
 
       Object.entries(theme("colors")).forEach(([colorName, color]) => {
